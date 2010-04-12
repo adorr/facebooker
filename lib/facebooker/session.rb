@@ -322,6 +322,37 @@ module Facebooker
       post_file('facebook.events.create', :event_info => event_info.to_json, nil => multipart_post_file)
     end
     
+    # Edits an event with the event_info hash and an optional Net::HTTP::MultipartPostFile for the event picture.
+    # A value for eid, the event's ID, is expected to be present in the event_info hash.
+    # If ActiveSupport::TimeWithZone is installed (it's in Rails > 2.1), and start_time or end_time are given as
+    # ActiveSupport::TimeWithZone, then they will be assumed to represent local time for the event. They will automatically be
+    # converted to the expected timezone for Facebook, which is PST or PDT depending on when the event occurs.
+    # Returns true if successful, or an error code otherwise
+    # http://wiki.developers.facebook.com/index.php/Events.edit
+    def edit_event(eid, event_info, multipart_post_file = nil)
+      if defined?(ActiveSupport::TimeWithZone) && defined?(ActiveSupport::TimeZone)
+        # Facebook expects all event local times to be in Pacific Time, so we need to take the actual local time and 
+        # send it to Facebook as if it were Pacific Time converted to Unix epoch timestamp. Very confusing...
+        facebook_time = ActiveSupport::TimeZone["Pacific Time (US & Canada)"]
+        
+        start_time = event_info.delete(:start_time) || event_info.delete('start_time')
+        if start_time && start_time.is_a?(ActiveSupport::TimeWithZone)
+          event_info['start_time'] = facebook_time.parse(start_time.strftime("%Y-%m-%d %H:%M:%S")).to_i
+        else
+          event_info['start_time'] = start_time
+        end
+        
+        end_time = event_info.delete(:end_time) || event_info.delete('end_time')
+        if end_time && end_time.is_a?(ActiveSupport::TimeWithZone)
+          event_info['end_time'] = facebook_time.parse(end_time.strftime("%Y-%m-%d %H:%M:%S")).to_i
+        else
+          event_info['end_time'] = end_time
+        end
+      end
+      
+      post_file('facebook.events.edit', :eid => eid, :event_info => event_info.to_json, nil => multipart_post_file)
+    end
+    
     # Cancel an event
     # http://wiki.developers.facebook.com/index.php/Events.cancel
     # E.g:

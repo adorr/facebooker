@@ -521,6 +521,15 @@ XML
     XML
   end
   
+  def example_event_edit_xml
+    <<-XML
+    <?xml version="1.0" encoding="UTF-8"?>
+    <events_edit_response xmlns="http://api.facebook.com/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://api.facebook.com/1.0/ http://api.facebook.com/1.0/facebook.xsd">
+      1
+    </events_edit_response> 
+    XML
+  end
+  
   def example_event_cancel_xml
     <<-XML
     <?xml version="1.0" encoding="UTF-8"?>
